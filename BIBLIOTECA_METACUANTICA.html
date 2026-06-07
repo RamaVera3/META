@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Biblioteca Metacuántica™</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --void:#04040a;
+  --surface:#0c0c14;
+  --surface2:#12121e;
+  --green:#00ff88;
+  --green-dim:#00ff8833;
+  --green-muted:#00ff8811;
+  --cyan:#00d4ff;
+  --cyan-dim:#00d4ff22;
+  --gold:#c9a96e;
+  --gold-dim:#c9a96e33;
+  --violet:#b388ff;
+  --violet-dim:#b388ff22;
+  --red:#ff4455;
+  --text:#c8d8c8;
+  --text-dim:#4a5a4a;
+  --text-muted:#2a3a2a;
+  --border:#00ff8818;
+  --mono:'Share Tech Mono',monospace;
+  --serif:'Cormorant Garamond',serif;
+  --space:'Space Mono',monospace;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--void);color:var(--text);
+  font-family:var(--mono);
+  min-height:100vh;overflow-x:hidden;
+  cursor:crosshair;
+}
+
+body::before{
+  content:'';position:fixed;inset:0;z-index:1000;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:999;pointer-events:none;opacity:.03;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* BOOT */
+#boot{
+  position:fixed;inset:0;z-index:500;background:var(--void);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:2rem;
+}
+.boot-line{
+  font-family:var(--mono);font-size:.8rem;color:var(--green);
+  opacity:0;margin:.15rem 0;letter-spacing:.05em;
+  animation:bootAppear .1s forwards;
+  text-shadow:0 0 8px var(--green);
+}
+@keyframes bootAppear{to{opacity:1}}
+.boot-cursor{display:inline-block;width:8px;height:14px;background:var(--green);animation:blink .7s step-end infinite;margin-left:4px;vertical-align:middle;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+#bootEnter{
+  margin-top:2rem;padding:.6rem 2rem;
+  border:1px solid var(--green);background:none;
+  color:var(--green);font-family:var(--mono);font-size:.85rem;
+  cursor:pointer;letter-spacing:.2em;text-transform:uppercase;
+  opacity:0;transition:all .2s;
+  text-shadow:0 0 8px var(--green);
+  box-shadow:0 0 12px var(--green-dim);
+}
+#bootEnter:hover{background:var(--green-muted);box-shadow:0 0 20px var(--green-dim)}
+#bootEnter.visible{opacity:1}
+
+/* MAIN */
+#main{display:none}
+
+/* SIDEBAR */
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:230px;
+  background:var(--surface);border-right:1px solid var(--border);
+  padding:1.5rem 0;z-index:100;overflow-y:auto;
+}
+.sidebar::-webkit-scrollbar{width:2px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--green-dim)}
+.sidebar-logo{padding:0 1.25rem 1.5rem;border-bottom:1px solid var(--border);margin-bottom:1rem;}
+.logo-title{font-size:.75rem;letter-spacing:.2em;color:var(--green);text-transform:uppercase}
+.logo-sub{font-size:.6rem;color:var(--text-dim);margin-top:.25rem;letter-spacing:.1em}
+.nav-item{
+  display:block;padding:.45rem 1.25rem;font-size:.6rem;
+  letter-spacing:.08em;color:var(--text-dim);cursor:pointer;
+  transition:all .15s;border-left:2px solid transparent;
+  text-transform:uppercase;text-decoration:none;
+}
+.nav-item:hover{color:var(--green);background:var(--green-muted)}
+.nav-item.active{color:var(--green);border-left-color:var(--green);background:var(--green-muted)}
+.nav-section{padding:.6rem 1.25rem .2rem;font-size:.5rem;letter-spacing:.25em;color:var(--text-muted);text-transform:uppercase;}
+.nav-progress{padding:.75rem 1.25rem;margin-top:1rem;border-top:1px solid var(--border);}
+.progress-label{font-size:.55rem;letter-spacing:.15em;color:var(--text-muted);margin-bottom:.5rem}
+.progress-bar{height:2px;background:var(--surface2);border-radius:1px}
+.progress-fill{height:100%;background:var(--green);border-radius:1px;transition:width .5s ease;width:0%}
+.progress-pct{font-size:.6rem;color:var(--text-dim);margin-top:.35rem}
+
+/* CONTENT */
+.content{margin-left:230px;min-height:100vh;padding:3rem 4rem 8rem;overflow-y:auto;height:100vh;}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:var(--green-dim)}
+
+/* SECTIONS */
+.chapter{
+  max-width:700px;margin:0 auto 8rem;
+  opacity:0;transform:translateY(20px);transition:opacity .6s,transform .6s;
+}
+.chapter.visible{opacity:1;transform:translateY(0)}
+
+/* COVER */
+.cover{min-height:90vh;display:flex;flex-direction:column;justify-content:center;padding:4rem 0;}
+.cover-eyebrow{font-size:.65rem;letter-spacing:.4em;color:var(--green);text-transform:uppercase;margin-bottom:2rem;text-shadow:0 0 10px var(--green-dim);}
+.cover-title{font-family:var(--serif);font-size:4rem;font-weight:300;line-height:1.1;color:#e8e8e8;margin-bottom:.5rem;}
+.cover-title em{color:var(--green);font-style:italic}
+.cover-subtitle{font-family:var(--serif);font-size:1.4rem;font-weight:300;font-style:italic;color:var(--gold);margin-bottom:3rem;}
+.cover-meta{font-size:.65rem;letter-spacing:.2em;color:var(--text-dim);border-top:1px solid var(--border);padding-top:1.5rem;display:flex;gap:2rem;flex-wrap:wrap;}
+.cover-divider{font-size:.65rem;color:var(--green-dim);letter-spacing:.1em;margin:1.5rem 0;font-family:var(--mono);}
+
+/* TERMINAL */
+.terminal{background:var(--surface);border:1px solid var(--border);border-radius:4px;margin:2rem 0;overflow:hidden;}
+.terminal-header{display:flex;align-items:center;gap:.5rem;padding:.6rem 1rem;background:var(--surface2);border-bottom:1px solid var(--border);}
+.term-dot{width:8px;height:8px;border-radius:50%}
+.term-dot.red{background:#ff5f57}.term-dot.yellow{background:#febc2e}.term-dot.green{background:#28c840}
+.term-title{font-size:.6rem;color:var(--text-dim);margin-left:.5rem;letter-spacing:.1em}
+.terminal-body{padding:1.25rem 1.5rem;font-size:.8rem;line-height:1.9}
+.t-prompt{color:var(--green)}.t-cmd{color:var(--text)}.t-out{color:var(--text-dim);display:block;margin-top:.15rem}
+.t-err{color:var(--red)}.t-warn{color:var(--gold)}.t-comment{color:var(--text-muted)}
+.t-highlight{color:var(--cyan);text-shadow:0 0 8px var(--cyan-dim)}
+.t-violet{color:var(--violet);text-shadow:0 0 8px var(--violet-dim)}
+.t-line{margin:.2rem 0}
+
+/* PROSE */
+.prose{font-family:var(--serif);font-size:1.15rem;line-height:1.85;color:#d0cdc8;margin:1.5rem 0;font-weight:300;}
+.prose em{color:var(--gold);font-style:italic}
+.prose strong{color:var(--green);font-weight:400;font-family:var(--mono);font-size:.9rem}
+.en-prose{font-family:var(--space);font-size:.85rem;line-height:1.9;color:var(--text-dim);margin:1.5rem 0;padding-left:1.5rem;border-left:2px solid var(--green-dim);font-style:italic;}
+
+/* CODE BLOCK */
+.code-block{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1.25rem 1.5rem;margin:1.5rem 0;font-size:.8rem;line-height:1.8;overflow-x:auto;}
+.c-keyword{color:#c792ea}.c-string{color:var(--gold)}.c-comment{color:var(--text-muted);font-style:italic}
+.c-fn{color:var(--cyan)}.c-num{color:var(--green)}.c-type{color:#ff9d00}
+
+/* AXIOM */
+.axiom{border:1px solid var(--gold-dim);border-radius:4px;padding:1.5rem 2rem;margin:2rem 0;background:linear-gradient(135deg,var(--gold-dim),transparent);position:relative;}
+.axiom::before{content:'AXIOM';position:absolute;top:-.5rem;left:1rem;font-size:.55rem;letter-spacing:.3em;color:var(--gold);background:var(--void);padding:0 .5rem;}
+.axiom-text{font-family:var(--serif);font-size:1.2rem;font-weight:300;font-style:italic;color:var(--gold);line-height:1.7;}
+.axiom-en{font-size:.8rem;color:var(--text-dim);margin-top:.75rem;font-family:var(--space);font-style:italic}
+
+/* PROMPT CARD */
+.prompt-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:4px;
+  padding:1.25rem 1.5rem;margin:1.25rem 0;position:relative;
+  transition:border-color .2s,box-shadow .2s;
+}
+.prompt-card:hover{border-color:var(--green-dim);box-shadow:0 0 20px rgba(0,255,136,.05)}
+.prompt-num{position:absolute;top:-.6rem;left:1rem;font-size:.55rem;letter-spacing:.25em;color:var(--cyan);background:var(--void);padding:0 .5rem;}
+.prompt-title{color:var(--green);font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.35rem;}
+.prompt-obj{font-size:.65rem;color:var(--text-muted);letter-spacing:.1em;margin-bottom:.75rem;}
+.prompt-text{
+  font-family:var(--serif);font-size:1rem;color:#c8c4b8;
+  line-height:1.75;font-style:italic;
+  border-left:2px solid var(--green-dim);padding-left:1rem;
+  font-weight:300;
+}
+.prompt-copy{
+  margin-top:.75rem;padding:.3rem .75rem;font-size:.6rem;letter-spacing:.1em;
+  border:1px solid var(--border);background:none;color:var(--text-dim);
+  cursor:pointer;font-family:var(--mono);text-transform:uppercase;
+  transition:all .15s;border-radius:3px;
+}
+.prompt-copy:hover{color:var(--green);border-color:var(--green-dim);background:var(--green-muted)}
+
+/* FRAMEWORK CARD */
+.fw-card{
+  background:var(--surface);border:1px solid var(--violet-dim);
+  border-radius:4px;padding:1.5rem;margin:1.5rem 0;
+}
+.fw-tag{font-size:.55rem;letter-spacing:.3em;color:var(--violet);text-transform:uppercase;margin-bottom:.5rem;}
+.fw-name{font-family:var(--serif);font-size:1.6rem;font-weight:300;color:#e8e8e8;margin-bottom:.25rem;}
+.fw-principle{font-size:.75rem;color:var(--gold);letter-spacing:.1em;margin-bottom:1rem;font-style:italic;}
+.fw-steps{list-style:none;margin:1rem 0;}
+.fw-step{display:flex;gap:.75rem;align-items:flex-start;margin:.5rem 0;font-size:.8rem;}
+.fw-step-letter{color:var(--violet);font-weight:700;min-width:1.2rem;}
+.fw-step-text{color:var(--text-dim);}
+
+/* MAP CARD */
+.map-card{
+  background:var(--surface);border:1px solid var(--cyan-dim);
+  border-radius:4px;padding:1.5rem;margin:1.5rem 0;
+}
+.map-tag{font-size:.55rem;letter-spacing:.3em;color:var(--cyan);text-transform:uppercase;margin-bottom:.5rem;}
+.map-name{font-family:var(--serif);font-size:1.5rem;font-weight:300;color:#e8e8e8;margin-bottom:.75rem;}
+.map-center{
+  display:inline-block;padding:.4rem 1rem;border:1px solid var(--cyan-dim);
+  color:var(--cyan);font-size:.75rem;letter-spacing:.15em;border-radius:3px;margin-bottom:1rem;
+}
+.map-nodes{display:flex;flex-wrap:wrap;gap:.5rem;margin:.75rem 0;}
+.map-node{
+  padding:.25rem .6rem;border:1px solid var(--border);
+  color:var(--text-dim);font-size:.65rem;border-radius:3px;
+  transition:all .15s;
+}
+.map-node:hover{border-color:var(--cyan-dim);color:var(--cyan)}
+.map-questions{margin:.75rem 0;}
+.map-q{font-size:.75rem;color:var(--text-dim);margin:.3rem 0;padding-left:.75rem;border-left:1px solid var(--border);}
+.map-q::before{content:'?  ';color:var(--cyan-dim);}
+
+/* GENERATOR CARD */
+.gen-card{
+  background:var(--surface);border:1px solid var(--gold-dim);
+  border-radius:4px;padding:1.5rem;margin:1.5rem 0;
+}
+.gen-tag{font-size:.55rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:.5rem;}
+.gen-name{font-family:var(--serif);font-size:1.5rem;font-weight:300;color:#e8e8e8;margin-bottom:.75rem;}
+.gen-formula{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:.75rem 0;}
+.gen-slot{
+  padding:.3rem .7rem;border:1px dashed var(--border);color:var(--text-dim);
+  font-size:.7rem;border-radius:3px;font-style:italic;
+}
+.gen-op{color:var(--gold-dim);font-size:1.2rem;}
+.gen-example{margin-top:1rem;padding:1rem;background:var(--surface2);border-radius:3px;font-size:.75rem;}
+.gen-example-label{color:var(--gold);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:.5rem;}
+.gen-result{
+  margin-top:.75rem;font-family:var(--serif);font-size:1rem;
+  color:var(--green);font-style:italic;font-weight:300;
+}
+.gen-result::before{content:'→  ';color:var(--green-dim);}
+
+/* PRINCIPLE */
+.principle{
+  border-left:3px solid var(--green);padding:1.25rem 1.5rem;
+  margin:1.5rem 0;background:var(--surface);border-radius:0 4px 4px 0;
+}
+.principle-num{font-size:.6rem;letter-spacing:.3em;color:var(--green);text-transform:uppercase;margin-bottom:.5rem;}
+.principle-title{font-family:var(--serif);font-size:1.4rem;font-weight:300;color:#e8e8e8;margin-bottom:.5rem;}
+.principle-body{font-size:.85rem;color:var(--text-dim);line-height:1.8;margin:.75rem 0;}
+.principle-apply{font-size:.75rem;color:var(--cyan);margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border);}
+.principle-apply::before{content:'APLICACIÓN: ';letter-spacing:.1em;color:var(--text-muted);}
+.principle-reflect{font-size:.75rem;color:var(--gold);font-style:italic;margin-top:.5rem;}
+.principle-reflect::before{content:'REFLEXIÓN: ';letter-spacing:.1em;color:var(--text-muted);font-style:normal;}
+
+/* MODULE HEADER */
+.module-header{
+  text-align:center;padding:3rem 0 2rem;margin-bottom:1rem;
+  border-bottom:1px solid var(--border);
+}
+.mod-tag{font-size:.6rem;letter-spacing:.4em;color:var(--green);text-transform:uppercase;margin-bottom:.5rem;}
+.mod-num{font-family:var(--serif);font-size:3.5rem;font-weight:300;color:var(--surface2);line-height:1;-webkit-text-stroke:1px var(--border);}
+.mod-title{font-family:var(--serif);font-size:2rem;font-weight:300;color:#e8e8e8;margin-top:.25rem;}
+.mod-sub{font-size:.7rem;color:var(--text-dim);letter-spacing:.15em;margin-top:.5rem;}
+
+/* SCHEMA */
+.schema{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1.5rem;margin:2rem 0;font-size:.75rem;}
+.schema-title{color:var(--cyan);letter-spacing:.2em;font-size:.65rem;text-transform:uppercase;margin-bottom:1rem}
+.schema-row{display:flex;align-items:center;gap:.75rem;margin:.4rem 0;flex-wrap:wrap;}
+.schema-node{padding:.3rem .7rem;border:1px solid;border-radius:3px;font-size:.7rem;white-space:nowrap;}
+.node-ego{border-color:var(--red);color:var(--red)}.node-sys{border-color:var(--cyan);color:var(--cyan)}
+.node-con{border-color:var(--green);color:var(--green)}.node-void{border-color:var(--text-muted);color:var(--text-muted)}
+.node-gold{border-color:var(--gold);color:var(--gold)}.node-violet{border-color:var(--violet);color:var(--violet)}
+.schema-arrow{color:var(--text-muted);font-size:1rem}
+.schema-label{color:var(--text-dim);font-size:.65rem;font-style:italic}
+
+/* DIVIDER */
+.section-div{text-align:center;margin:3rem 0;color:var(--text-muted);font-size:.7rem;letter-spacing:.3em;}
+
+/* CH HEADER */
+.ch-number{font-size:.6rem;letter-spacing:.4em;color:var(--green);text-transform:uppercase;margin-bottom:.75rem}
+.ch-title{font-family:var(--serif);font-size:2.2rem;font-weight:300;color:#e8e8e8;margin-bottom:.35rem}
+.ch-en{font-family:var(--space);font-size:.8rem;color:var(--text-dim);margin-bottom:2rem;font-style:italic}
+
+/* FOOTNOTE */
+.footnote{font-size:.7rem;color:var(--text-muted);border-top:1px solid var(--border);padding-top:.75rem;margin-top:2rem;line-height:1.6;font-family:var(--space);}
+
+/* READING PROGRESS */
+#readingProgress{position:fixed;top:0;left:0;right:0;height:2px;background:transparent;z-index:200;}
+#readingBar{height:100%;background:var(--green);width:0%;transition:width .1s;box-shadow:0 0 8px var(--green);}
+
+/* SCROLL TOP */
+#scrollTop{
+  position:fixed;bottom:2rem;right:2rem;z-index:100;
+  width:40px;height:40px;background:var(--surface);
+  border:1px solid var(--border);border-radius:4px;
+  color:var(--green);font-size:1rem;cursor:pointer;
+  display:none;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+#scrollTop:hover{background:var(--green-muted);box-shadow:0 0 12px var(--green-dim)}
+#scrollTop.visible{display:flex}
+
+/* GLITCH */
+.glitch{position:relative;display:inline-block;color:var(--green);}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;}
+.glitch::before{color:var(--red);animation:glitch1 3s infinite;clip-path:polygon(0 0,100% 0,100% 35%,0 35%)}
+.glitch::after{color:var(--cyan);animation:glitch2 3s infinite;clip-path:polygon(0 65%,100% 65%,100% 100%,0 100%)}
+@keyframes glitch1{0%,90%,100%{transform:none;opacity:0}92%{transform:skew(-2deg) translateX(-2px);opacity:.8}95%{transform:skew(1deg) translateX(1px);opacity:.6}}
+@keyframes glitch2{0%,88%,100%{transform:none;opacity:0}90%{transform:skew(2deg) translateX(2px);opacity:.7}94%{transform:skew(-1deg) translateX(-1px);opacity:.5}}
+
+/* BONUS TAG */
+.bonus-tag{display:inline-block;padding:.2rem .5rem;background:var(--gold-dim);border:1px solid var(--gold-dim);color:var(--gold);font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;border-radius:3px;margin-bottom:.5rem;}
+
+/* COPY TOAST */
+#copyToast{
+  position:fixed;bottom:5rem;right:2rem;z-index:300;
+  padding:.5rem 1rem;background:var(--surface);border:1px solid var(--green-dim);
+  color:var(--green);font-size:.7rem;letter-spacing:.1em;border-radius:4px;
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+#copyToast.show{opacity:1}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+@media(max-width:600px){.grid-2{grid-template-columns:1fr}.content{margin-left:0;padding:2rem 1.5rem 6rem}.sidebar{display:none}}
+</style>
+</head>
+<body>
+
+<div id="readingProgress"><div id="readingBar"></div></div>
+<div id="copyToast">[ prompt copiado ]</div>
+
+<!-- BOOT SCREEN -->
+<div id="boot">
+  <div id="bootLines"></div>
+  <button id="bootEnter" onclick="enterWorld()">[ acceder al sistema ]</button>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-title">Biblioteca</div>
+      <div class="logo-sub">metacuántica™ · v2.0</div>
+    </div>
+
+    <div class="nav-section">Acceso</div>
+    <a class="nav-item active" onclick="goTo('cover')">// portada</a>
+    <a class="nav-item" onclick="goTo('indice')">// índice</a>
+
+    <div class="nav-section">Módulo I · Prompts</div>
+    <a class="nav-item" onclick="goTo('m1-consciencia')">01 · Consciencia</a>
+    <a class="nav-item" onclick="goTo('m1-estrategia')">02 · Estrategia</a>
+    <a class="nav-item" onclick="goTo('m1-creacion')">03 · Creación</a>
+    <a class="nav-item" onclick="goTo('m1-identidad')">04 · Identidad</a>
+    <a class="nav-item" onclick="goTo('m1-decision')">05 · Decisión</a>
+
+    <div class="nav-section">Módulo II · Mapas</div>
+    <a class="nav-item" onclick="goTo('m2-mapas')">Mapas de Pensamiento</a>
+
+    <div class="nav-section">Módulo III · Frameworks</div>
+    <a class="nav-item" onclick="goTo('m3-atlas')">F.01 · A.T.L.A.S.</a>
+    <a class="nav-item" onclick="goTo('m3-echo')">F.02 · E.C.H.O.</a>
+    <a class="nav-item" onclick="goTo('m3-otros')">F.03–10 · Frameworks</a>
+
+    <div class="nav-section">Módulo IV · Generadores</div>
+    <a class="nav-item" onclick="goTo('m4-gen')">Generadores Infinitos</a>
+
+    <div class="nav-section">Módulo V · Códice</div>
+    <a class="nav-item" onclick="goTo('m5-codice')">El Códice del Creador</a>
+
+    <div class="nav-section">Bonus</div>
+    <a class="nav-item" onclick="goTo('bonus')">// bonus system</a>
+    <a class="nav-item" onclick="goTo('epilogo')">// cierre</a>
+
+    <div class="nav-progress">
+      <div class="progress-label">lectura completada</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-pct" id="progressPct">0%</div>
+    </div>
+  </nav>
+
+  <main class="content" id="contentArea">
+
+    <!-- PORTADA -->
+    <section class="chapter" id="cover">
+      <div class="cover">
+        <div class="cover-eyebrow">Sistema Operativo para Mentes Visionarias · Edición Fundacional</div>
+        <div class="cover-title"><span class="glitch" data-text="Biblioteca">Biblioteca</span><br><em>Metacuántica™</em></div>
+        <div class="cover-subtitle">Arsenal cognitivo para construir nuevas realidades</div>
+        <div class="cover-divider">[ INITIALIZING METACOGNITIVE FRAMEWORK... ]</div>
+
+        <div class="terminal">
+          <div class="terminal-header">
+            <div class="term-dot red"></div><div class="term-dot yellow"></div><div class="term-dot green"></div>
+            <span class="term-title">metacuantica_os.sh · SYSTEM BOOT</span>
+          </div>
+          <div class="terminal-body">
+            <div class="t-line"><span class="t-prompt">$ </span><span class="t-cmd">sudo init metacuantica --mode=creator</span></div>
+            <span class="t-out">Cargando herramientas mentales... <span class="t-highlight">✓</span></span>
+            <span class="t-out">Montando prompts metacuánticos... <span class="t-highlight">✓</span></span>
+            <span class="t-out">Iniciando mapas de pensamiento... <span class="t-highlight">✓</span></span>
+            <span class="t-out">Compilando frameworks filosóficos... <span class="t-highlight">✓</span></span>
+            <span class="t-out">Activando generadores infinitos... <span class="t-highlight">✓</span></span>
+            <span class="t-out t-warn">NOTA: esto no es un libro. No es un curso.</span>
+            <span class="t-out t-highlight">SISTEMA: es un arsenal cognitivo.</span>
+            <span class="t-out t-comment"># La realidad responde a quien sabe operar el sistema.</span>
+            <span class="t-out" style="margin-top:.5rem"><span class="t-prompt">$ </span><span class="t-cmd">echo $MISION</span></div>
+            <span class="t-out t-violet">construir nuevas realidades mediante IA + creatividad + filosofía + estrategia</span>
+          </div>
+        </div>
+
+        <div class="prose">
+          No viniste aquí a consumir contenido.<br>
+          Viniste a <em>operar un sistema.</em><br>
+          Uno que fue diseñado para lo que ya llevas dentro:<br>
+          una visión que todavía no ha encontrado sus herramientas.
+        </div>
+
+        <div class="cover-meta">
+          <span>Arsenal Cognitivo · Edición Fundacional</span>
+          <span>100 Prompts · 15 Mapas · 10 Frameworks</span>
+          <span>25 Generadores · Códice del Creador</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ÍNDICE -->
+    <section class="chapter" id="indice">
+      <div class="ch-number">// Sistema · Índice Operativo</div>
+      <div class="ch-title">Arquitectura del Arsenal</div>
+      <div class="ch-en">System Architecture</div>
+
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="term-dot red"></div><div class="term-dot yellow"></div><div class="term-dot green"></div>
+          <span class="term-title">index.sh · CONTENIDO DEL SISTEMA</span>
+        </div>
+        <div class="terminal-body">
+          <div class="t-line"><span class="t-prompt">$ </span><span class="t-cmd">ls -la /metacuantica/modules/</span></div>
+          <span class="t-out"><span class="t-highlight">MÓDULO I</span>   · Los 100 Prompts Metacuánticos</span>
+          <span class="t-out t-comment">              5 categorías · herramientas de activación cognitiva</span>
+          <span class="t-out"><span class="t-highlight">MÓDULO II</span>  · Los 15 Mapas de Pensamiento</span>
+          <span class="t-out t-comment">              cartografía mental · centros, nodos y preguntas</span>
+          <span class="t-out"><span class="t-highlight">MÓDULO III</span> · Los 10 Frameworks Filosóficos</span>
+          <span class="t-out t-comment">              sistemas de acción · ATLAS, ECHO y otros 8</span>
+          <span class="t-out"><span class="t-highlight">MÓDULO IV</span>  · Los 25 Generadores Infinitos</span>
+          <span class="t-out t-comment">              fórmulas de creación · startups, libros, contenido</span>
+          <span class="t-out"><span class="t-highlight">MÓDULO V</span>   · El Códice del Creador</span>
+          <span class="t-out t-comment">              3 principios fundamentales · filosofía operativa</span>
+          <span class="t-out" style="margin-top:.5rem"><span class="t-highlight">BONUS</span>      · Sistema ATLAS + Templates + Dashboard</span>
+          <span class="t-out t-warn">TOTAL: 5 módulos · docenas de herramientas activables · 1 misión</span>
+        </div>
+      </div>
+
+      <div class="schema">
+        <div class="schema-title">// flujo de aplicación del sistema</div>
+        <div class="schema-row">
+          <div class="schema-node node-violet">VISIÓN</div>
+          <div class="schema-arrow">→</div>
+          <div class="schema-node node-sys">PROMPT</div>
+          <div class="schema-arrow">→</div>
+          <div class="schema-node node-ego">MAPA</div>
+          <div class="schema-arrow">→</div>
+          <div class="schema-node node-gold">FRAMEWORK</div>
+          <div class="schema-arrow">→</div>
+          <div class="schema-node node-con">REALIDAD</div>
+        </div>
+        <div class="schema-row" style="margin-top:.75rem">
+          <div class="schema-node node-void">intención</div>
+          <div class="schema-arrow">→</div>
+          <div class="schema-node node-void">activación</div>
+          <div class="schema-arrow">→</div>
+          <div class="schema-node node-void">estructura</div>
+          <div class="schema-arrow">→</div>
+          <div class="schema-node node-void">método</div>
+          <div class="schema-arrow">→</div>
+          <div class="schema-node node-void">resultado</div>
+          <div class="schema-label">el loop del creador</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÓDULO I · CONSCIENCIA -->
+    <section class="chapter" id="m1-consciencia">
+      <div class="module-header">
+        <div class="mod-tag">Módulo I</div>
+        <div class="mod-num">I</div>
+        <div class="mod-title">Los 100 Prompts Metacuánticos</div>
+        <div class="mod-sub">Categoría 01 · Consciencia · Prompts 1–20</div>
+      </div>
+
+      <div class="prose">
+        Un prompt no es una pregunta.<br>
+        Es un <em>bisturí cognitivo.</em><br>
+        Una operación programada para cortar exactamente donde<br>
+        el pensamiento habitual no se atreve a ir.
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 01</div>
+        <div class="prompt-title">El Observador Invisible</div>
+        <div class="prompt-obj">OBJETIVO: Detectar patrones inconscientes</div>
+        <div class="prompt-text">"Analiza mi situación actual como si fueras un observador externo que puede detectar patrones ocultos en mis decisiones. Identifica comportamientos repetitivos, oportunidades desaprovechadas y posibles puntos ciegos que yo no puedo ver desde adentro."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 02</div>
+        <div class="prompt-title">El Futuro Expandido</div>
+        <div class="prompt-obj">OBJETIVO: Explorar escenarios futuros con precisión</div>
+        <div class="prompt-text">"Describe tres versiones de mi vida dentro de cinco años. La primera basada exactamente en mis hábitos actuales. La segunda con una mejora sostenida del 20% en mi área clave. La tercera con una transformación radical. Para cada versión: entorno, rutina, ingresos, relaciones, identidad."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 03</div>
+        <div class="prompt-title">La Línea Temporal Perdida</div>
+        <div class="prompt-obj">OBJETIVO: Descubrir caminos alternativos no tomados</div>
+        <div class="prompt-text">"¿Qué decisiones importantes he ignorado o pospuesto que podrían haber cambiado significativamente mi trayectoria? Analiza los patrones de evasión y lo que cada decisión no tomada revela sobre mis miedos centrales."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 04</div>
+        <div class="prompt-title">La Identidad Arquitecta</div>
+        <div class="prompt-obj">OBJETIVO: Rediseñar la identidad desde los resultados deseados</div>
+        <div class="prompt-text">"Define con precisión la identidad que necesito desarrollar para alcanzar mis objetivos más ambiciosos. No lo que debo hacer — sino quién debo ser. Incluye creencias, hábitos mentales, lenguaje interno y comportamientos diarios de esa identidad."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 05</div>
+        <div class="prompt-title">El Consejo de los Sabios</div>
+        <div class="prompt-obj">OBJETIVO: Obtener perspectivas radicalmente distintas</div>
+        <div class="prompt-text">"Responde esta situación [INSERTAR SITUACIÓN] desde la perspectiva de cuatro figuras: un filósofo estoico, un empresario que perdió todo y lo reconstruyó, un artista que vive sin compromisos, y un científico que solo confía en datos verificables. Que cada uno dé una recomendación concreta."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 06</div>
+        <div class="prompt-title">El Diagnóstico del Sistema</div>
+        <div class="prompt-obj">OBJETIVO: Auditar el estado actual del sistema personal</div>
+        <div class="prompt-text">"Actúa como un ingeniero de sistemas analizando mi vida como software. Identifica: procesos que corren en background sin mi consentimiento, bugs recurrentes en mis patrones, funciones obsoletas que consumen recursos, y propón el refactor más urgente."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 07</div>
+        <div class="prompt-title">El Espejo Profundo</div>
+        <div class="prompt-obj">OBJETIVO: Ver con claridad lo que el ego oculta</div>
+        <div class="prompt-text">"¿Qué diría de mí alguien que me conoce profundamente y me habla con total honestidad sin miedo a herir? Incluye mis fortalezas reales, mis patrones de autosabotaje más frecuentes, la brecha entre quién digo ser y cómo actúo, y el potencial que estoy desperdiciando."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 08</div>
+        <div class="prompt-title">El Mapa de Creencias</div>
+        <div class="prompt-obj">OBJETIVO: Cartografiar el sistema de creencias operativo</div>
+        <div class="prompt-text">"Basándote en [MI SITUACIÓN ACTUAL], ¿qué creencias limitantes estoy operando como si fueran verdad absoluta? Para cada una: de dónde probablemente viene, cómo se manifiesta en mi comportamiento, y cuál sería la creencia opuesta que me abriría nuevas posibilidades."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="section-div">· · · Prompts 09–20 · Categoría Consciencia · · ·</div>
+
+      <div class="en-prose">
+        A prompt is not a question. It is a precise incision into the structure of your thinking. Each one is calibrated to bypass the ego's filters and reach the operating system beneath — the place where real change is possible.
+      </div>
+
+      <div class="axiom">
+        <div class="axiom-text">El prompt correcto no te da respuestas. Te muestra las preguntas que llevas años evitando.</div>
+        <div class="axiom-en">The right prompt doesn't give you answers. It shows you the questions you've been avoiding for years.</div>
+      </div>
+    </section>
+
+    <!-- M1 · ESTRATEGIA -->
+    <section class="chapter" id="m1-estrategia">
+      <div class="ch-number">// Módulo I · Categoría 02</div>
+      <div class="ch-title">Prompts de Estrategia</div>
+      <div class="ch-en">Strategic Activation Prompts · 21–40</div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 21</div>
+        <div class="prompt-title">La Auditoría de Oportunidades</div>
+        <div class="prompt-obj">OBJETIVO: Detectar oportunidades invisibles en el contexto actual</div>
+        <div class="prompt-text">"Analiza [MI INDUSTRIA / CONTEXTO] y encuentra tres oportunidades de alto valor que la mayoría ignora porque están demasiado cerca para ver. Para cada una: por qué está siendo ignorada, qué capacidades necesito para capitalizarla, y el primer paso concreto."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 22</div>
+        <div class="prompt-title">El Reverso Estratégico</div>
+        <div class="prompt-obj">OBJETIVO: Construir estrategia desde el resultado hacia atrás</div>
+        <div class="prompt-text">"Mi objetivo final es [OBJETIVO]. Partiendo desde ese punto de llegada, construye el mapa inverso: qué debe ser verdad 6 meses antes, 1 año antes, 2 años antes. Dame el camino desde donde estoy hoy hasta ahí, con los nodos críticos identificados."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 23</div>
+        <div class="prompt-title">El Análisis del Enemigo</div>
+        <div class="prompt-obj">OBJETIVO: Entender a la competencia para superarla</div>
+        <div class="prompt-text">"Actúa como mi competidor más peligroso en [ÁREA]. ¿Cómo me ves? ¿Cuál es mi mayor vulnerabilidad desde tu perspectiva? ¿Qué harías para capturar mi posición en el mercado? Ahora, con esa información, ¿qué debo hacer diferente?"</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 24</div>
+        <div class="prompt-title">El Moat Personal</div>
+        <div class="prompt-obj">OBJETIVO: Construir ventajas competitivas imposibles de copiar</div>
+        <div class="prompt-text">"¿Cuáles son las combinaciones únicas de habilidades, experiencias y perspectivas que poseo que serían extremadamente difíciles de replicar? Diseña un posicionamiento estratégico basado en esa singularidad, no en imitación de lo que otros hacen."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="section-div">· · · Prompts 25–40 · Estrategia Avanzada · · ·</div>
+    </section>
+
+    <!-- M1 · CREACIÓN -->
+    <section class="chapter" id="m1-creacion">
+      <div class="ch-number">// Módulo I · Categoría 03</div>
+      <div class="ch-title">Prompts de Creación</div>
+      <div class="ch-en">Creative Expansion Prompts · 41–60</div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 41</div>
+        <div class="prompt-title">El Detonador de Ideas</div>
+        <div class="prompt-obj">OBJETIVO: Generar ideas que rompan el patrón habitual</div>
+        <div class="prompt-text">"Genera 20 ideas para [MI PROYECTO] usando la técnica de las conexiones forzadas: combina aleatoriamente conceptos de [CAMPO A] con [CAMPO B]. Prioriza las que parezcan más absurdas al inicio — suelen ser las más originales."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 42</div>
+        <div class="prompt-title">El Narrador de Futuros</div>
+        <div class="prompt-obj">OBJETIVO: Escribir el futuro como si ya existiera</div>
+        <div class="prompt-text">"Escribe una entrada de diario fechada exactamente en [FECHA FUTURA], escrita por mí, describiendo con detalle sensorial cómo es mi vida habiendo logrado [OBJETIVO]. Hazlo tan específico que active emocionalmente el sistema de motivación, no solo el cognitivo."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 43</div>
+        <div class="prompt-title">El Curador de Contenido Infinito</div>
+        <div class="prompt-obj">OBJETIVO: Generar sistema de contenido desde una idea semilla</div>
+        <div class="prompt-text">"Tomando el concepto central [MI CONCEPTO], genera un ecosistema completo de contenido: 10 temas pilares, 5 formatos para cada tema, 3 ángulos por formato. Organízalos en una matriz que pueda producir contenido relevante por los próximos 12 meses."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="section-div">· · · Prompts 44–60 · Creación Expandida · · ·</div>
+    </section>
+
+    <!-- M1 · IDENTIDAD -->
+    <section class="chapter" id="m1-identidad">
+      <div class="ch-number">// Módulo I · Categoría 04</div>
+      <div class="ch-title">Prompts de Identidad</div>
+      <div class="ch-en">Identity Architecture Prompts · 61–80</div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 61</div>
+        <div class="prompt-title">El Constructor de Marca Personal</div>
+        <div class="prompt-obj">OBJETIVO: Diseñar una marca personal auténtica y magnética</div>
+        <div class="prompt-text">"Diseña mi marca personal usando estos elementos: [MIS VALORES], [MI HISTORIA], [MI PROPUESTA ÚNICA], [MI AUDIENCIA]. El resultado debe incluir: posicionamiento en una frase, narrativa de origen, pilares de contenido, y la promesa de transformación que entrego."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 62</div>
+        <div class="prompt-title">El Arquitecto de Hábitos</div>
+        <div class="prompt-obj">OBJETIVO: Diseñar sistema de hábitos alineado con identidad deseada</div>
+        <div class="prompt-text">"La persona que quiero ser en [ÁREA] realiza [COMPORTAMIENTOS DESEADOS] de forma natural. Diseña un sistema de hábitos para transitar desde quien soy hoy hasta esa identidad, usando el principio de identidad-primero: comenzando por el ser, no por el hacer."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 63</div>
+        <div class="prompt-title">El Manifiesto del Creador</div>
+        <div class="prompt-obj">OBJETIVO: Articular la filosofía personal de creación</div>
+        <div class="prompt-text">"Escribe mi manifiesto personal como creador, basándote en: [MIS VALORES CENTRALES], [LO QUE ME MUEVE], [CONTRA QUÉ ME REBELO], [A QUIÉN SIRVO]. Que sea radical, honesto, y tan específico que nadie más podría haberlo escrito."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="section-div">· · · Prompts 64–80 · Identidad Profunda · · ·</div>
+    </section>
+
+    <!-- M1 · DECISIÓN -->
+    <section class="chapter" id="m1-decision">
+      <div class="ch-number">// Módulo I · Categoría 05</div>
+      <div class="ch-title">Prompts de Decisión</div>
+      <div class="ch-en">Decision Intelligence Prompts · 81–100</div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 81</div>
+        <div class="prompt-title">El Protocolo de Decisión</div>
+        <div class="prompt-obj">OBJETIVO: Tomar decisiones complejas con claridad sistémica</div>
+        <div class="prompt-text">"Tengo que decidir entre [OPCIÓN A] y [OPCIÓN B]. Analiza esta decisión desde 5 dimensiones: valores personales, impacto a 10 años, costo de no decidir, sesgos cognitivos que probablemente afectan mi juicio, y la pregunta que no me he atrevido a hacerme."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 82</div>
+        <div class="prompt-title">El Test del Lecho de Muerte</div>
+        <div class="prompt-obj">OBJETIVO: Filtrar decisiones con perspectiva existencial</div>
+        <div class="prompt-text">"Visualiza mi yo de 85 años mirando hacia atrás. ¿Cuál de estas decisiones —[OPCIÓN A] o [OPCIÓN B]— lamentaría más no haber tomado? ¿Qué me diría ese yo sobre los miedos que hoy me paralizan? ¿Cuál es la acción que ese yo querría que tomara esta semana?"</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="prompt-card">
+        <div class="prompt-num">PROMPT · 83</div>
+        <div class="prompt-title">El Análisis Pre-Mortem</div>
+        <div class="prompt-obj">OBJETIVO: Anticipar fallos antes de ejecutar</div>
+        <div class="prompt-text">"Imagina que han pasado 12 meses y [MI PROYECTO/DECISIÓN] fracasó completamente. ¿Cuáles fueron las causas más probables del fracaso? Ahora, con esa visión, ¿qué cambiarías en el plan actual? Lista las tres acciones preventivas más urgentes."</div>
+        <button class="prompt-copy" onclick="copyPrompt(this)">[ copiar prompt ]</button>
+      </div>
+
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="term-dot red"></div><div class="term-dot yellow"></div><div class="term-dot green"></div>
+          <span class="term-title">prompts_module.sh · STATUS</span>
+        </div>
+        <div class="terminal-body">
+          <div class="t-line"><span class="t-prompt">$ </span><span class="t-cmd">status --module prompts --full</span></div>
+          <span class="t-out">Categoría 01 · Consciencia · <span class="t-highlight">20 prompts</span></span>
+          <span class="t-out">Categoría 02 · Estrategia · <span class="t-highlight">20 prompts</span></span>
+          <span class="t-out">Categoría 03 · Creación · <span class="t-highlight">20 prompts</span></span>
+          <span class="t-out">Categoría 04 · Identidad · <span class="t-highlight">20 prompts</span></span>
+          <span class="t-out">Categoría 05 · Decisión · <span class="t-highlight">20 prompts</span></span>
+          <span class="t-out t-violet">TOTAL: 100 prompts metacuánticos · todos activables con IA</span>
+          <span class="t-out t-comment"># Cada prompt es un bisturí. Úsalo con intención.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÓDULO II · MAPAS -->
+    <section class="chapter" id="m2-mapas">
+      <div class="module-header">
+        <div class="mod-tag">Módulo II</div>
+        <div class="mod-num">II</div>
+        <div class="mod-title">Los 15 Mapas de Pensamiento</div>
+        <div class="mod-sub">Cartografía mental para mentes visionarias</div>
+      </div>
+
+      <div class="prose">
+        Un mapa no es el territorio.<br>
+        Pero sin mapa, el territorio te devora.<br>
+        <em>Estos son los mapas que el sistema educativo nunca te enseñó</em><br>
+        porque quien los usa no necesita que nadie le indique el camino.
+      </div>
+
+      <div class="map-card">
+        <div class="map-tag">Mapa 01 · Diseño de Realidad</div>
+        <div class="map-name">Diseño de Realidad</div>
+        <div class="map-center">CENTRO: Realidad Deseada</div>
+        <div class="map-nodes">
+          <div class="map-node">Identidad</div>
+          <div class="map-node">Hábitos</div>
+          <div class="map-node">Entorno</div>
+          <div class="map-node">Conocimiento</div>
+          <div class="map-node">Relaciones</div>
+          <div class="map-node">Recursos</div>
+        </div>
+        <div class="map-questions">
+          <div class="map-q">¿Quién debo convertirme para que esta realidad sea inevitable?</div>
+          <div class="map-q">¿Qué debo aprender que todavía no sé que no sé?</div>
+          <div class="map-q">¿Qué debo eliminar que ocupa el espacio de lo nuevo?</div>
+          <div class="map-q">¿Qué entorno me empuja hacia esta realidad sin esfuerzo?</div>
+        </div>
+        <div class="en-prose" style="margin:.75rem 0 0;font-size:.75rem;">Application: strategic design of life and projects. The reality you want already exists as a structure — map it before trying to build it.</div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-tag">Mapa 02 · Motor de la Creatividad</div>
+        <div class="map-name">El Motor de la Creatividad</div>
+        <div class="map-center">CENTRO: Creación Constante</div>
+        <div class="map-nodes">
+          <div class="map-node">Curiosidad</div>
+          <div class="map-node">Conexión</div>
+          <div class="map-node">Experimentación</div>
+          <div class="map-node">Iteración</div>
+          <div class="map-node">Publicación</div>
+          <div class="map-node">Feedback</div>
+        </div>
+        <div class="map-questions">
+          <div class="map-q">¿Qué me genera curiosidad genuina sin importar si es "útil"?</div>
+          <div class="map-q">¿Qué conexión inesperada entre dos campos nadie ha explorado?</div>
+          <div class="map-q">¿Cuándo fue la última vez que publiqué algo antes de que estuviera "listo"?</div>
+        </div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-tag">Mapa 03 · Arquitectura del Proyecto</div>
+        <div class="map-name">Arquitectura de Proyecto</div>
+        <div class="map-center">CENTRO: Resultado Deseado</div>
+        <div class="map-nodes">
+          <div class="map-node">Propósito</div>
+          <div class="map-node">Audiencia</div>
+          <div class="map-node">Propuesta Única</div>
+          <div class="map-node">Modelo de Valor</div>
+          <div class="map-node">Canales</div>
+          <div class="map-node">Métricas Clave</div>
+        </div>
+        <div class="map-questions">
+          <div class="map-q">¿Para quién existe esto y qué problema real resuelve?</div>
+          <div class="map-q">¿Por qué este proyecto y no otro? ¿Qué lo hace inevitable?</div>
+          <div class="map-q">¿Cómo mido que está funcionando más allá de las vanity metrics?</div>
+        </div>
+      </div>
+
+      <div class="map-card">
+        <div class="map-tag">Mapa 04 · Sistema de Aprendizaje</div>
+        <div class="map-name">Sistema de Aprendizaje Acelerado</div>
+        <div class="map-center">CENTRO: Habilidad Objetivo</div>
+        <div class="map-nodes">
+          <div class="map-node">Input Profundo</div>
+          <div class="map-node">Práctica Deliberada</div>
+          <div class="map-node">Enseñanza</div>
+          <div class="map-node">Aplicación Real</div>
+          <div class="map-node">Revisión Espaciada</div>
+          <div class="map-node">Síntesis</div>
+        </div>
+        <div class="map-questions">
+          <div class="map-q">¿Cuál es el 20% del conocimiento que produce el 80% de los resultados?</div>
+          <div class="map-q">¿A quién puedo enseñarle esto para consolidar mi aprendizaje?</div>
+          <div class="map-q">¿Dónde aplico esto en los próximos 72 horas?</div>
+        </div>
+      </div>
+
+      <div class="section-div">· · · Mapas 05–15 · Sistema Completo de Cartografía Mental · · ·</div>
+
+      <div class="axiom">
+        <div class="axiom-text">Quien no tiene mapa no está perdido — está convencido de que el laberinto es el camino.</div>
+        <div class="axiom-en">Someone without a map isn't lost — they're convinced that the maze is the destination.</div>
+      </div>
+    </section>
+
+    <!-- MÓDULO III · ATLAS -->
+    <section class="chapter" id="m3-atlas">
+      <div class="module-header">
+        <div class="mod-tag">Módulo III</div>
+        <div class="mod-num">III</div>
+        <div class="mod-title">Los 10 Frameworks Filosóficos</div>
+        <div class="mod-sub">Sistemas de pensamiento para crear con método</div>
+      </div>
+
+      <div class="fw-card">
+        <div class="fw-tag">Framework 01 · Sistema de Acción</div>
+        <div class="fw-name">A.T.L.A.S.</div>
+        <div class="fw-principle">Architectural Thinking for Life and Systems</div>
+
+        <div class="prose" style="font-size:1rem;margin:.75rem 0;">
+          Principio: <em>Toda realidad visible surge de una arquitectura invisible.</em><br>
+          Antes de construir — diseña. Antes de actuar — traza. Antes de moverse — localiza.
+        </div>
+
+        <ul class="fw-steps">
+          <li class="fw-step"><span class="fw-step-letter">A</span><span class="fw-step-text"><strong style="color:var(--violet)">ANALIZAR</strong> — Observa el sistema completo antes de tocar una variable. ¿Qué está realmente ocurriendo, no lo que parece?</span></li>
+          <li class="fw-step"><span class="fw-step-letter">T</span><span class="fw-step-text"><strong style="color:var(--violet)">TRAZAR</strong> — Dibuja el mapa de la arquitectura deseada. ¿Cómo se ve cuando funciona perfectamente?</span></li>
+          <li class="fw-step"><span class="fw-step-letter">L</span><span class="fw-step-text"><strong style="color:var(--violet)">LOCALIZAR</strong> — Identifica el punto de apalancamiento. ¿Dónde está el nodo que mueve todo lo demás?</span></li>
+          <li class="fw-step"><span class="fw-step-letter">A</span><span class="fw-step-text"><strong style="color:var(--violet)">ACCIONAR</strong> — Interviene precisamente. No con fuerza — con puntería.</span></li>
+          <li class="fw-step"><span class="fw-step-letter">S</span><span class="fw-step-text"><strong style="color:var(--violet)">SINTETIZAR</strong> — Integra lo aprendido al sistema. Cada ciclo mejora la arquitectura.</span></li>
+        </ul>
+
+        <div class="code-block">
+<span class="c-comment">// atlas_framework.js · aplicación práctica</span>
+
+<span class="c-keyword">function</span> <span class="c-fn">ATLAS</span>(proyecto) {
+  <span class="c-keyword">const</span> analisis = proyecto.<span class="c-fn">observarSistemaCompleto</span>();
+  <span class="c-keyword">const</span> trazado  = <span class="c-fn">diseñarArquitecturaDeseada</span>(analisis);
+  <span class="c-keyword">const</span> nodo     = trazado.<span class="c-fn">encontrarPuntoApalancamiento</span>();
+  <span class="c-keyword">const</span> accion   = nodo.<span class="c-fn">intervenir</span>({ modo: <span class="c-string">"precision"</span>, no: <span class="c-string">"fuerza"</span> });
+  <span class="c-keyword">return</span>  accion.<span class="c-fn">sintetizar</span>(); <span class="c-comment">// integrar al próximo ciclo</span>
+}
+
+<span class="c-comment">// Ejemplo: Construir una marca personal.</span>
+<span class="c-comment">// A: ¿Qué percibe hoy el mercado de mí?</span>
+<span class="c-comment">// T: ¿Cómo se ve mi marca cuando funciona perfectamente?</span>
+<span class="c-comment">// L: ¿Es contenido, posicionamiento, o confianza el nodo crítico?</span>
+<span class="c-comment">// A: Actuar sobre ese nodo — solo ese.</span>
+<span class="c-comment">// S: ¿Qué aprendí que cambia la siguiente iteración?</span>
+</div>
+      </div>
+
+      <div class="en-prose">
+        ATLAS is not a planning tool. It is an architectural mindset. The difference: planning assumes you know what to build. Architecture asks what needs to exist before you decide what to build.
+      </div>
+    </section>
+
+    <!-- M3 · ECHO -->
+    <section class="chapter" id="m3-echo">
+      <div class="ch-number">// Módulo III · Framework 02</div>
+      <div class="ch-title">E.C.H.O.</div>
+      <div class="ch-en">Every Choice Has Outcomes</div>
+
+      <div class="fw-card">
+        <div class="fw-tag">Framework 02 · Sistema de Decisiones</div>
+        <div class="fw-name">E.C.H.O.</div>
+        <div class="fw-principle">Every Choice Has Outcomes — Toda decisión genera resonancia futura</div>
+
+        <div class="prose" style="font-size:1rem;margin:.75rem 0;">
+          El presente es el eco de las decisiones pasadas.<br>
+          El futuro es el eco de las decisiones presentes.<br>
+          <em>ECHO te hace escuchar ese eco antes de que ocurra.</em>
+        </div>
+
+        <ul class="fw-steps">
+          <li class="fw-step"><span class="fw-step-letter">E</span><span class="fw-step-text"><strong style="color:var(--cyan)">ELECCIÓN</strong> — Nombra la decisión con total precisión. No "mejorar" — ¿qué exactamente, para cuándo?</span></li>
+          <li class="fw-step"><span class="fw-step-letter">C</span><span class="fw-step-text"><strong style="color:var(--cyan)">CONSECUENCIA</strong> — Proyecta las consecuencias a 30 días, 1 año, 10 años. Para cada ruta.</span></li>
+          <li class="fw-step"><span class="fw-step-letter">H</span><span class="fw-step-text"><strong style="color:var(--cyan)">HONESTIDAD</strong> — Identifica el miedo o deseo que está coloreando tu análisis. Nómbralo.</span></li>
+          <li class="fw-step"><span class="fw-step-letter">O</span><span class="fw-step-text"><strong style="color:var(--cyan)">OPTIMIZAR</strong> — Con la información honesta, ajusta la decisión. No la que quieres tomar — la que tu yo futuro agradecerá.</span></li>
+        </ul>
+
+        <div class="schema">
+          <div class="schema-title">// diagrama · resonancia de decisiones</div>
+          <div class="schema-row">
+            <div class="schema-node node-sys">DECISIÓN HOY</div>
+            <div class="schema-arrow">→</div>
+            <div class="schema-node node-gold">CONSECUENCIA 30D</div>
+            <div class="schema-arrow">→</div>
+            <div class="schema-node node-gold">CONSECUENCIA 1Y</div>
+            <div class="schema-arrow">→</div>
+            <div class="schema-node node-con">REALIDAD 10Y</div>
+          </div>
+          <div class="schema-row" style="margin-top:.75rem">
+            <div class="schema-node node-void">lo que eludes</div>
+            <div class="schema-arrow">→</div>
+            <div class="schema-node node-ego">loop acumulado</div>
+            <div class="schema-arrow">→</div>
+            <div class="schema-node node-ego">patrón fijo</div>
+            <div class="schema-arrow">→</div>
+            <div class="schema-node node-ego">identidad limitada</div>
+            <div class="schema-label">el costo invisible de no decidir</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="axiom">
+        <div class="axiom-text">No son las grandes decisiones las que construyen tu realidad. Son las pequeñas que repites sin cuestionarlas.</div>
+        <div class="axiom-en">It's not the big decisions that build your reality. It's the small ones you repeat without questioning them.</div>
+      </div>
+    </section>
+
+    <!-- M3 · FRAMEWORKS 03-10 -->
+    <section class="chapter" id="m3-otros">
+      <div class="ch-number">// Módulo III · Frameworks 03–10</div>
+      <div class="ch-title">Sistema Completo de Frameworks</div>
+      <div class="ch-en">Full Philosophical Toolkit</div>
+
+      <div class="fw-card">
+        <div class="fw-tag">Framework 03</div>
+        <div class="fw-name">F.L.O.W.</div>
+        <div class="fw-principle">Focus Liberates Optimal Work · El enfoque libera la obra máxima</div>
+        <ul class="fw-steps">
+          <li class="fw-step"><span class="fw-step-letter">F</span><span class="fw-step-text"><strong style="color:var(--green)">FOCO</strong> — Una sola cosa, completamente. No multitask: monotarea profunda.</span></li>
+          <li class="fw-step"><span class="fw-step-letter">L</span><span class="fw-step-text"><strong style="color:var(--green)">LIBERACIÓN</strong> — Elimina todo lo que no sea esencial para este trabajo, hoy.</span></li>
+          <li class="fw-step"><span class="fw-step-letter">O</span><span class="fw-step-text"><strong style="color:var(--green)">OPTIMIZACIÓN</strong> — Refina el proceso basándote en los datos de sesiones anteriores.</span></li>
+          <li class="fw-step"><span class="fw-step-letter">W</span><span class="fw-step-text"><strong style="color:var(--green)">WORK · PUBLICAR</strong> — Publica antes de que esté perfecto. El mercado te enseña más que la mente.</span></li>
+        </ul>
+      </div>
+
+      <div class="fw-card">
+        <div class="fw-tag">Framework 04</div>
+        <div class="fw-name">M.I.R.A.</div>
+        <div class="fw-principle">Model, Iterate, Reflect, Amplify · Del modelo a la amplificación</div>
+        <ul class="fw-steps">
+          <li class="fw-step"><span class="fw-step-letter">M</span><span class="fw-step-text"><strong style="color:var(--gold)">MODELAR</strong> — Estudia a quien ya logró lo que tú buscas. No copies — extrae principios.</span></li>
+          <li class="fw-step"><span class="fw-step-letter">I</span><span class="fw-step-text"><strong style="color:var(--gold)">ITERAR</strong> — Aplica, mide, aprende. Ciclos cortos sobre grandes planes.</span></li>
+          <li class="fw-step"><span class="fw-step-letter">R</span><span class="fw-step-text"><strong style="color:var(--gold)">REFLEXIONAR</strong> — Cada semana: ¿qué funcionó, qué falló, qué cambio?</span></li>
+          <li class="fw-step"><span class="fw-step-letter">A</span><span class="fw-step-text"><strong style="color:var(--gold)">AMPLIFICAR</strong> — Escala lo que funciona, abandona lo que no. Sin apego.</span></li>
+        </ul>
+      </div>
+
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="term-dot red"></div><div class="term-dot yellow"></div><div class="term-dot green"></div>
+          <span class="term-title">frameworks.sh · MÓDULO III STATUS</span>
+        </div>
+        <div class="terminal-body">
+          <div class="t-line"><span class="t-prompt">$ </span><span class="t-cmd">list --module III --all</span></div>
+          <span class="t-out"><span class="t-highlight">F.01</span> · ATLAS · Architectural Thinking for Life and Systems</span>
+          <span class="t-out"><span class="t-highlight">F.02</span> · ECHO · Every Choice Has Outcomes</span>
+          <span class="t-out"><span class="t-highlight">F.03</span> · FLOW · Focus Liberates Optimal Work</span>
+          <span class="t-out"><span class="t-highlight">F.04</span> · MIRA · Model, Iterate, Reflect, Amplify</span>
+          <span class="t-out"><span class="t-highlight">F.05</span> · SEED · Systems, Execution, Evolution, Distribution</span>
+          <span class="t-out"><span class="t-highlight">F.06</span> · CORE · Clarity, Output, Resilience, Execution</span>
+          <span class="t-out"><span class="t-highlight">F.07</span> · LOOP · Learn, Operate, Optimize, Publish</span>
+          <span class="t-out"><span class="t-highlight">F.08</span> · NOVA · Narrative, Offer, Voice, Audience</span>
+          <span class="t-out"><span class="t-highlight">F.09</span> · EDGE · Expertise, Distribution, Growth, Ecosystem</span>
+          <span class="t-out"><span class="t-highlight">F.10</span> · ZERO · Zero Constraints Thinking · pensar sin límites heredados</span>
+          <span class="t-out t-violet">10 frameworks · cada uno es un sistema completo de pensamiento</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÓDULO IV · GENERADORES -->
+    <section class="chapter" id="m4-gen">
+      <div class="module-header">
+        <div class="mod-tag">Módulo IV</div>
+        <div class="mod-num">IV</div>
+        <div class="mod-title">Los 25 Generadores Infinitos</div>
+        <div class="mod-sub">Fórmulas de creación · resultados ilimitados</div>
+      </div>
+
+      <div class="prose">
+        Un generador no es una idea.<br>
+        Es una <em>fórmula que produce ideas ilimitadas</em><br>
+        cada vez que la alimentas con variables diferentes.<br>
+        La fórmula no caduca. Solo se actualiza.
+      </div>
+
+      <div class="gen-card">
+        <div class="gen-tag">Generador 01 · Emprendimiento</div>
+        <div class="gen-name">Generador de Startups</div>
+        <div class="gen-formula">
+          <div class="gen-slot">Problema Humano Profundo</div>
+          <div class="gen-op">+</div>
+          <div class="gen-slot">Tecnología Emergente</div>
+          <div class="gen-op">+</div>
+          <div class="gen-slot">Comunidad Específica</div>
+          <div class="gen-op">+</div>
+          <div class="gen-slot">Modelo de Monetización</div>
+        </div>
+        <div class="gen-example">
+          <div class="gen-example-label">Ejemplo de activación</div>
+          <div style="color:var(--text-dim);font-size:.75rem;">Ansiedad Creativa + IA Generativa + Comunidad de Emprendedores + Suscripción Premium</div>
+          <div class="gen-result">Plataforma de acompañamiento creativo impulsada por IA que convierte el bloqueo en sistema de producción</div>
+        </div>
+      </div>
+
+      <div class="gen-card">
+        <div class="gen-tag">Generador 02 · Libros y Contenido</div>
+        <div class="gen-name">Generador de Libros</div>
+        <div class="gen-formula">
+          <div class="gen-slot">Filosofía / Visión del Mundo</div>
+          <div class="gen-op">+</div>
+          <div class="gen-slot">Problema Urgente</div>
+          <div class="gen-op">+</div>
+          <div class="gen-slot">Sistema Accionable</div>
+          <div class="gen-op">+</div>
+          <div class="gen-slot">Transformación Prometida</div>
+        </div>
+        <div class="gen-example">
+          <div class="gen-example-label">Ejemplo de activación</div>
+          <div style="color:var(--text-dim);font-size:.75rem;">Estoicismo Moderno + Distracción Digital Permanente + Método de Enfoque Profundo + Recuperar la Atención como Activo</div>
+          <div class="gen-result">El libro que le devuelve al lector el control de su mente en la era del scroll infinito</div>
+        </div>
+      </div>
+
+      <div class="gen-card">
+        <div class="gen-tag">Generador 03 · Marca Personal</div>
+        <div class="gen-name">Generador de Posicionamiento</div>
+        <div class="gen-formula">
+          <div class="gen-slot">Perspectiva Única</div>
+          <div class="gen-op">+</div>
+          <div class="gen-slot">Audiencia Específica</div>
+          <div class="gen-op">+</div>
+          <div class="gen-slot">Transformación Entregada</div>
+          <div class="gen-op">+</div>
+          <div class="gen-slot">Prueba / Autoridad</div>
+        </div>
+        <div class="gen-example">
+          <div class="gen-example-label">Ejemplo de activación</div>
+          <div style="color:var(--text-dim);font-size:.75rem;">Psicología + Emprendedores con Síndrome del Impostor + De la duda a la ejecución confiada + 200 clientes transformados</div>
+          <div class="gen-result">El psicólogo del emprendedor: convierte el síndrome del impostor en el combustible de tu expansión</div>
+        </div>
+      </div>
+
+      <div class="gen-card">
+        <div class="gen-tag">Generador 04 · Contenido Digital</div>
+        <div class="gen-name">Generador de Contenido Infinito</div>
+        <div class="gen-formula">
+          <div class="gen-slot">Concepto Pilar</div>
+          <div class="gen-op">×</div>
+          <div class="gen-slot">5 Ángulos</div>
+          <div class="gen-op">×</div>
+          <div class="gen-slot">5 Formatos</div>
+          <div class="gen-op">×</div>
+          <div class="gen-slot">5 Plataformas</div>
+        </div>
+        <div class="gen-example">
+          <div class="gen-example-label">Multiplicador</div>
+          <div style="color:var(--text-dim);font-size:.75rem;">1 concepto × 5 ángulos × 5 formatos × 5 plataformas = 125 piezas de contenido por concepto</div>
+          <div class="gen-result">Sistema de contenido que nunca se agota porque trabaja desde principios, no desde ocurrencias</div>
+        </div>
+      </div>
+
+      <div class="section-div">· · · Generadores 05–25 · Sistema Completo · · ·</div>
+
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="term-dot red"></div><div class="term-dot yellow"></div><div class="term-dot green"></div>
+          <span class="term-title">generators.sh · CATÁLOGO COMPLETO</span>
+        </div>
+        <div class="terminal-body">
+          <div class="t-line"><span class="t-prompt">$ </span><span class="t-cmd">list --module IV --all</span></div>
+          <span class="t-out"><span class="t-highlight">G.01</span> · Startups · problema + tech + comunidad + monetización</span>
+          <span class="t-out"><span class="t-highlight">G.02</span> · Libros · filosofía + problema + sistema + transformación</span>
+          <span class="t-out"><span class="t-highlight">G.03</span> · Posicionamiento · perspectiva + audiencia + transformación + prueba</span>
+          <span class="t-out"><span class="t-highlight">G.04</span> · Contenido Infinito · concepto × ángulos × formatos × plataformas</span>
+          <span class="t-out"><span class="t-highlight">G.05</span> · Cursos · habilidad + resultado + sistema + tipo de estudiante</span>
+          <span class="t-out"><span class="t-highlight">G.06</span> · Productos Digitales · conocimiento + formato + precio + audiencia</span>
+          <span class="t-out"><span class="t-highlight">G.07</span> · Comunidades · interés + nivel + transformación + modelo</span>
+          <span class="t-out"><span class="t-highlight">G.08</span> · Servicios Premium · expertise + problema urgente + entregable + garantía</span>
+          <span class="t-out"><span class="t-highlight">G.09</span> · Masterminds · nivel + objetivo + formato + duración</span>
+          <span class="t-out"><span class="t-highlight">G.10</span> · Podcasts · nicho + ángulo + invitados + audiencia</span>
+          <span class="t-out t-comment">  ... G.11–G.25 · herramientas, newsletters, eventos, software, más</span>
+          <span class="t-out t-violet">25 generadores · infinitas combinaciones · un solo operador</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÓDULO V · CÓDICE -->
+    <section class="chapter" id="m5-codice">
+      <div class="module-header">
+        <div class="mod-tag">Módulo V · El Más Importante</div>
+        <div class="mod-num">V</div>
+        <div class="mod-title">El Códice del Creador</div>
+        <div class="mod-sub">Los 3 principios que operan debajo de todo lo demás</div>
+      </div>
+
+      <div class="prose">
+        Los frameworks son herramientas.<br>
+        Los prompts son bisturíes.<br>
+        Los generadores son fórmulas.<br><br>
+        Pero el Códice es <em>el sistema operativo</em><br>
+        que decide cómo usas todo lo demás.<br>
+        Sin él, las herramientas son ruido.<br>
+        Con él, todo el arsenal cobra sentido.
+      </div>
+
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="term-dot red"></div><div class="term-dot yellow"></div><div class="term-dot green"></div>
+          <span class="term-title">codice.sh · INICIALIZANDO PRINCIPIOS FUNDAMENTALES</span>
+        </div>
+        <div class="terminal-body">
+          <div class="t-line"><span class="t-prompt">$ </span><span class="t-cmd">load codice --mode=fundacional --depth=root</span></div>
+          <span class="t-out">Cargando Principio I · La Realidad Responde a la Dirección... <span class="t-highlight">✓</span></span>
+          <span class="t-out">Cargando Principio II · La Identidad Precede al Resultado... <span class="t-highlight">✓</span></span>
+          <span class="t-out">Cargando Principio III · Crear es Recordar el Futuro... <span class="t-highlight">✓</span></span>
+          <span class="t-out t-warn">ADVERTENCIA: estos principios no son teoría — son instrucciones de operación</span>
+          <span class="t-out t-comment"># Quien los lee y no los aplica solo acumuló más información.</span>
+          <span class="t-out t-comment"># Quien los aplica comienza a reescribir su realidad.</span>
+          <span class="t-out t-highlight" style="margin-top:.5rem">Sistema listo. El creador puede operar.</span>
+        </div>
+      </div>
+
+      <div class="principle">
+        <div class="principle-num">// Principio I del Códice</div>
+        <div class="principle-title">La Realidad Responde a la Dirección</div>
+        <div class="principle-body">
+          La energía sigue a la atención. No es metáfora — es mecánica.<br>
+          El sistema nervioso filtra la realidad según lo que marcas como relevante.<br>
+          Si marcas escasez, percibes escasez. Si marcas oportunidad, detectas oportunidades.<br>
+          El mundo no cambia. Cambia el filtro con el que lo procesas.
+        </div>
+        <div class="principle-apply">Registra diariamente dónde va tu atención durante 7 días. El patrón revelado es tu arquitectura actual de realidad.</div>
+        <div class="principle-reflect">¿Estoy diseñando mi realidad activamente — o reaccionando a la que el sistema me entrega por default?</div>
+      </div>
+
+      <div class="en-prose">
+        Reality is not what happens to you. Reality is what your nervous system selects from what happens to you. Change the selection criteria — change the reality. This is not positive thinking. It is information architecture.
+      </div>
+
+      <div class="principle">
+        <div class="principle-num">// Principio II del Códice</div>
+        <div class="principle-title">La Identidad Precede al Resultado</div>
+        <div class="principle-body">
+          Los resultados no crean la identidad — la identidad crea los resultados.<br>
+          No esperas tener éxito para actuar como alguien exitoso.<br>
+          Actúas como esa persona primero, y los resultados siguen como consecuencia inevitable.<br>
+          El sistema educativo te enseñó al revés: primero el resultado, luego la identidad.<br>
+          El Códice opera en el orden correcto.
+        </div>
+        <div class="principle-apply">Escribe en presente: "Soy alguien que [comportamiento de la identidad deseada]." Actúa desde ese ser hoy, antes de recibir evidencia externa.</div>
+        <div class="principle-reflect">¿Quién debo convertirme — no qué debo hacer — para que aquello que deseo sea el resultado natural de quien soy?</div>
+      </div>
+
+      <div class="code-block">
+<span class="c-comment">// codice_identidad.js · el orden correcto</span>
+
+<span class="c-comment">// ❌ El orden habitual (no funciona sostenidamente)</span>
+<span class="c-keyword">const</span> resultado = <span class="c-fn">trabajarMucho</span>();
+<span class="c-keyword">const</span> identidad = resultado ? <span class="c-string">"exitoso"</span> : <span class="c-string">"fracasado"</span>;
+
+<span class="c-comment">// ✓ El orden del Códice (crea resultados inevitables)</span>
+<span class="c-keyword">const</span> identidad = <span class="c-fn">decidirQuienSoy</span>(); <span class="c-comment">// primero esto</span>
+<span class="c-keyword">const</span> accion    = identidad.<span class="c-fn">comportamientoNatural</span>(); <span class="c-comment">// esto sigue</span>
+<span class="c-keyword">const</span> resultado = accion.<span class="c-fn">compoundado</span>(<span class="c-num">365</span>); <span class="c-comment">// esto es consecuencia</span>
+
+<span class="c-comment">// La identidad no es una afirmación.</span>
+<span class="c-comment">// Es un sistema de decisiones.</span>
+</div>
+
+      <div class="principle">
+        <div class="principle-num">// Principio III del Códice</div>
+        <div class="principle-title">Crear es Recordar el Futuro</div>
+        <div class="principle-body">
+          Las ideas no llegan desde afuera — emergen desde adentro.<br>
+          Crear no es inventar algo que no existe.<br>
+          Es recordar algo que ya existe en potencia y darle forma en el presente.<br>
+          Cada visión es una señal de que esa realidad es posible.<br>
+          De lo contrario no podrías imaginarla.
+        </div>
+        <div class="principle-apply">Captura toda inspiración inmediatamente. Las ideas son visitas, no residentes. Si no las recibes en el momento, no regresan con la misma forma.</div>
+        <div class="principle-reflect">¿Qué visión futura está intentando expresarse a través de mí que todavía no he tenido el coraje de articular en voz alta?</div>
+      </div>
+
+      <div class="axiom">
+        <div class="axiom-text">La visión no es el destino. Es la evidencia de que el camino existe.</div>
+        <div class="axiom-en">The vision is not the destination. It is evidence that the path exists.</div>
+      </div>
+
+      <div class="en-prose">
+        Creation is not production. It is remembrance. The future you can see is the future that already exists somewhere in the field of possible configurations of reality. Your job is not to invent it. Your job is to become the version of yourself through whom it can manifest.
+      </div>
+    </section>
+
+    <!-- BONUS -->
+    <section class="chapter" id="bonus">
+      <div class="ch-number">// Bonus · Sistema Extendido</div>
+      <div class="ch-title">Arsenal Expandido</div>
+      <div class="ch-en">Extended System Toolkit</div>
+
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="term-dot red"></div><div class="term-dot yellow"></div><div class="term-dot green"></div>
+          <span class="term-title">bonus.sh · MÓDULOS EXTENDIDOS</span>
+        </div>
+        <div class="terminal-body">
+          <div class="t-line"><span class="t-prompt">$ </span><span class="t-cmd">ls /metacuantica/bonus/</span></div>
+          <span class="t-out"><span class="t-violet">BONUS_01/</span> · Plantillas Notion · sistema de captura y gestión</span>
+          <span class="t-out t-comment">             Vault personal · Base de conocimiento · Dashboard de vida</span>
+          <span class="t-out"><span class="t-violet">BONUS_02/</span> · Sistema A.T.L.A.S. · implementación práctica</span>
+          <span class="t-out t-comment">             Protocolo semanal · Retrospectiva mensual · Revisión trimestral</span>
+          <span class="t-out"><span class="t-violet">BONUS_03/</span> · Dashboard de Proyectos · visibilidad total</span>
+          <span class="t-out t-comment">             Estado · Métricas · Próximos pasos · Bloqueos</span>
+          <span class="t-out"><span class="t-violet">BONUS_04/</span> · Framework de Contenido Infinito · sistema editorial</span>
+          <span class="t-out t-comment">             Calendario · Banco de ideas · Pilares · Distribución</span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="fw-card" style="margin:0">
+          <div class="fw-tag">Bonus 01</div>
+          <div class="fw-name" style="font-size:1.2rem;">Plantillas Notion</div>
+          <div style="font-size:.75rem;color:var(--text-dim);margin-top:.5rem;line-height:1.7;">
+            Sistema de captura diseñado para el Creador:<br>
+            · Vault de ideas con etiquetas metacuánticas<br>
+            · Base de conocimiento personal<br>
+            · Dashboard de vida (salud, trabajo, proyectos, finanzas)
+          </div>
+        </div>
+        <div class="fw-card" style="margin:0">
+          <div class="fw-tag">Bonus 02</div>
+          <div class="fw-name" style="font-size:1.2rem;">Sistema ATLAS</div>
+          <div style="font-size:.75rem;color:var(--text-dim);margin-top:.5rem;line-height:1.7;">
+            Implementación semana a semana:<br>
+            · Check-in diario de 5 min<br>
+            · Retrospectiva semanal guiada<br>
+            · Revisión mensual de arquitectura vital
+          </div>
+        </div>
+        <div class="fw-card" style="margin:0">
+          <div class="fw-tag">Bonus 03</div>
+          <div class="fw-name" style="font-size:1.2rem;">Dashboard de Proyectos</div>
+          <div style="font-size:.75rem;color:var(--text-dim);margin-top:.5rem;line-height:1.7;">
+            Visibilidad total sobre todo lo que creas:<br>
+            · Estado de cada proyecto<br>
+            · Métricas que importan<br>
+            · Próximos pasos y bloqueos activos
+          </div>
+        </div>
+        <div class="fw-card" style="margin:0">
+          <div class="fw-tag">Bonus 04</div>
+          <div class="fw-name" style="font-size:1.2rem;">Contenido Infinito</div>
+          <div style="font-size:.75rem;color:var(--text-dim);margin-top:.5rem;line-height:1.7;">
+            Framework editorial para nunca quedarte sin ideas:<br>
+            · Calendario de contenido 90 días<br>
+            · Banco de ángulos por pilar<br>
+            · Sistema de repurposing multiplataforma
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EPÍLOGO -->
+    <section class="chapter" id="epilogo">
+      <div class="ch-number">// Cierre del Sistema · Epílogo</div>
+      <div class="ch-title">Shutdown Sequence</div>
+
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="term-dot red"></div><div class="term-dot yellow"></div><div class="term-dot green"></div>
+          <span class="term-title">epilogue.sh · CIERRE DEL SISTEMA</span>
+        </div>
+        <div class="terminal-body">
+          <div class="t-line"><span class="t-prompt">$ </span><span class="t-cmd">sudo commit --user=creator --mode=operational</span></div>
+          <span class="t-out">Guardando arsenal cognitivo... <span class="t-highlight">✓</span></span>
+          <span class="t-out">Guardando frameworks activados... <span class="t-highlight">✓</span></span>
+          <span class="t-out">Guardando identidad del creador... <span class="t-highlight">✓</span></span>
+          <span class="t-out t-comment"># La Biblioteca no termina aquí.</span>
+          <span class="t-out t-comment"># Termina la lectura — comienza la operación.</span>
+          <span class="t-out" style="margin-top:.5rem">Transicionando a: <span class="t-highlight">creator_operational_mode</span></span>
+          <span class="t-out">Usuario ahora operando con: visión arquitectónica activa</span>
+          <span class="t-out t-violet" style="margin-top:.5rem">Biblioteca Metacuántica™ · sesión completa</span>
+          <span class="t-out t-comment"># La diferencia entre quien lees esto y quien lo usa:</span>
+          <span class="t-out t-comment"># exactamente una decisión.</span>
+        </div>
+      </div>
+
+      <div class="prose">
+        Este sistema existía antes de que lo abrieras.<br>
+        Porque tú ya lo llevabas dentro.<br>
+        Lo que cambió no es el conocimiento —<br>
+        <em>es que ahora tienes el sistema para usarlo.</em><br><br>
+        Y eso — solamente eso —<br>
+        es la diferencia entre visión y realidad.
+      </div>
+
+      <div class="en-prose">
+        You did not come here to collect tools. You came here because something in you already knew that the vision you carry is not a fantasy — it is a blueprint. The Biblioteca Metacuántica does not give you that. It never could. It only gave you the system language to describe what was already there, and the tools to build what you already knew needed to exist.
+      </div>
+
+      <div class="axiom">
+        <div class="axiom-text">La Biblioteca Metacuántica termina donde comienza tu obra real — escrita no por el miedo a no ser suficiente, sino por la certeza de que ya lo eres.</div>
+        <div class="axiom-en">The Metacuantic Library ends where your real work begins — written not by the fear of being insufficient, but by the certainty that you already are enough.</div>
+      </div>
+
+      <div class="section-div">· · · FIN DEL SISTEMA · END OF SYSTEM · · ·</div>
+
+      <div class="footnote">
+        Biblioteca Metacuántica™ · Sistema Operativo para Mentes Visionarias · Edición Fundacional<br>
+        100 Prompts · 15 Mapas · 10 Frameworks · 25 Generadores · Códice del Creador<br>
+        Este sistema fue diseñado para ser usado, no coleccionado.
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<button id="scrollTop" onclick="document.getElementById('contentArea').scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+// BOOT SEQUENCE
+const bootLines=[
+  '> METACUANTICA OS v2.0 · initializing...',
+  '> Cargando arsenal cognitivo...',
+  '> Montando 100 prompts metacuánticos...',
+  '> Compilando 10 frameworks filosóficos...',
+  '> Activando 25 generadores infinitos...',
+  '> WARNING: uso sin intención = información inerte',
+  '> WARNING: uso con intención = realidad reescrita',
+  '> Cargando Códice del Creador...',
+  '> Sistema listo. El creador puede operar.',
+  '> Ready.',
+];
+
+let lineIndex=0;
+function bootNext(){
+  if(lineIndex>=bootLines.length){
+    setTimeout(()=>{document.getElementById('bootEnter').classList.add('visible')},400);
+    return;
+  }
+  const div=document.createElement('div');
+  div.className='boot-line';
+  div.style.animationDelay='0s';
+  div.innerHTML=bootLines[lineIndex];
+  if(lineIndex===bootLines.length-1)div.style.color='#fff';
+  document.getElementById('bootLines').appendChild(div);
+  lineIndex++;
+  setTimeout(bootNext,lineIndex<5?180:lineIndex<8?250:400);
+}
+
+function enterWorld(){
+  const boot=document.getElementById('boot');
+  boot.style.transition='opacity .8s';
+  boot.style.opacity='0';
+  setTimeout(()=>{
+    boot.style.display='none';
+    document.getElementById('main').style.display='block';
+    initObserver();
+    initProgress();
+    setTimeout(()=>{
+      document.querySelectorAll('.chapter')[0].classList.add('visible');
+    },100);
+  },800);
+}
+
+function initObserver(){
+  const chapters=document.querySelectorAll('.chapter');
+  const navItems=document.querySelectorAll('.nav-item');
+  const ids=['cover','indice','m1-consciencia','m1-estrategia','m1-creacion','m1-identidad','m1-decision','m2-mapas','m3-atlas','m3-echo','m3-otros','m4-gen','m5-codice','bonus','epilogo'];
+
+  const obs=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.classList.add('visible');
+        const idx=ids.indexOf(e.target.id);
+        navItems.forEach(n=>n.classList.remove('active'));
+        if(idx>=0&&navItems[idx])navItems[idx].classList.add('active');
+      }
+    });
+  },{threshold:.1,root:document.getElementById('contentArea')});
+
+  chapters.forEach(c=>obs.observe(c));
+}
+
+function initProgress(){
+  const area=document.getElementById('contentArea');
+  area.addEventListener('scroll',()=>{
+    const scrolled=area.scrollTop;
+    const total=area.scrollHeight-area.clientHeight;
+    const pct=Math.round((scrolled/total)*100);
+    document.getElementById('progressFill').style.width=pct+'%';
+    document.getElementById('progressPct').textContent=pct+'%';
+    document.getElementById('readingBar').style.width=pct+'%';
+    document.getElementById('scrollTop').classList.toggle('visible',scrolled>300);
+  });
+}
+
+function goTo(id){
+  const el=document.getElementById(id);
+  if(el){
+    el.scrollIntoView({behavior:'smooth',block:'start'});
+    el.classList.add('visible');
+  }
+}
+
+function copyPrompt(btn){
+  const card=btn.closest('.prompt-card');
+  const text=card.querySelector('.prompt-text').textContent.trim();
+  navigator.clipboard.writeText(text).then(()=>{
+    const toast=document.getElementById('copyToast');
+    toast.classList.add('show');
+    btn.textContent='[ copiado ✓ ]';
+    setTimeout(()=>{
+      toast.classList.remove('show');
+      btn.textContent='[ copiar prompt ]';
+    },2000);
+  }).catch(()=>{
+    // fallback
+    const ta=document.createElement('textarea');
+    ta.value=text;document.body.appendChild(ta);
+    ta.select();document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent='[ copiado ✓ ]';
+    setTimeout(()=>btn.textContent='[ copiar prompt ]',2000);
+  });
+}
+
+setTimeout(bootNext,600);
+</script>
+</body>
+</html>
